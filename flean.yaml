@@ -1,0 +1,4 @@
+name: drive_notes_app
+directory: D:\FlutterDev
+architecture: Feature First Clean
+bloc_path: /presentation/bloc
