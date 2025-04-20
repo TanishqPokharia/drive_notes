@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:dartz/dartz.dart';
 import 'package:drive_notes_app/core/utils/failure.dart';
 import 'package:drive_notes_app/features/offline_sync/data/datasource/local_files_datasource.dart';
@@ -53,14 +52,55 @@ class LocalFilesRepositoryImpl implements LocalFilesRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateFile(File file, File newFile) async {
-    final result = await dataSource.updateFile(
-      jsonEncode(file.toJson()),
-      jsonEncode(newFile.toJson()),
-    );
-    return result.fold(
-      (failure) => Left(failure),
-      (success) => const Right(()),
-    );
+  Future<Either<Failure, void>> updateFile(
+    String fileId,
+    String content,
+  ) async {
+    final result = await dataSource.getFiles();
+    return result.fold((failure) => Left(failure), (files) {
+      final contentFileList =
+          files.map((file) => ContentFile.fromJson(jsonDecode(file))).toList();
+      final fileToUpdate = contentFileList.firstWhere(
+        (element) => element.fileName == fileId,
+      );
+      final newFile = fileToUpdate.copyWith(
+        fileName: fileToUpdate.fileName,
+        content: content,
+      );
+      contentFileList[contentFileList.indexOf(fileToUpdate)] = newFile;
+      final newListToStore =
+          contentFileList.map((file) => jsonEncode(file.toJson())).toList();
+      return dataSource.storeList(newListToStore);
+    });
+  }
+
+  @override
+  Future<Either<Failure, void>> storeFile(File file) async {
+    final storedFiles = await dataSource.getFiles();
+    return storedFiles.fold((failure) => Left(failure), (files) {
+      final fileList =
+          files.map((file) => ContentFile.fromJson(jsonDecode(file))).toList();
+      if (fileList.any((f) => f.fileName == (file as ContentFile).fileName)) {
+        return const Left(Failure('File already exists'));
+      } else {
+        fileList.add(file as ContentFile);
+        final newListToStore =
+            fileList.map((file) => jsonEncode(file.toJson())).toList();
+        return dataSource.storeList(newListToStore);
+      }
+    });
+  }
+
+  @override
+  Future<Either<Failure, String>> getFileContent(String fileId) async {
+    final result = await dataSource.getFiles();
+    return result.fold((failure) => Left(failure), (files) {
+      final contentFileList =
+          files.map((file) => ContentFile.fromJson(jsonDecode(file))).toList();
+      final fileToGet = contentFileList.firstWhere(
+        (element) => element.name == fileId,
+      );
+      return Right(fileToGet.content);
+    });
   }
 }

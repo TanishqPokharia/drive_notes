@@ -19,7 +19,7 @@ class DriveNotesFilesNotifier extends _$DriveNotesFilesNotifier {
     return files.fold((failure) => null, (files) => files);
   }
 
-  void addFile(File file) {
+  void addNote(File file) {
     if (file.name == null) return;
     if (file.name!.isEmpty) return;
     state = AsyncData([...state.value ?? [], file]);

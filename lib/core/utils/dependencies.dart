@@ -22,6 +22,7 @@ import 'package:drive_notes_app/features/offline_sync/domain/repository/local_fi
 import 'package:drive_notes_app/features/offline_sync/domain/repository/offline_sync_repository.dart';
 import 'package:drive_notes_app/features/offline_sync/domain/usecases/check_offline_notes_exist.dart';
 import 'package:drive_notes_app/features/offline_sync/domain/usecases/delete_note_from_local.dart';
+import 'package:drive_notes_app/features/offline_sync/domain/usecases/get_file_content.dart';
 import 'package:drive_notes_app/features/offline_sync/domain/usecases/get_local_notes.dart';
 import 'package:drive_notes_app/features/offline_sync/domain/usecases/save_note_to_local.dart';
 import 'package:drive_notes_app/features/offline_sync/domain/usecases/sync_drive_notes.dart';
@@ -87,4 +88,5 @@ void registerUsecases() {
   getIt.registerLazySingleton(() => GetLocalNotes(getIt()));
   getIt.registerFactory(() => UpdateNoteInLocal(getIt()));
   getIt.registerFactory(() => CheckOfflineNotesExist(getIt()));
+  getIt.registerFactory(() => GetOfflineFileContent(getIt()));
 }

@@ -7,7 +7,7 @@ part of 'offline_drive_note_notifier.dart';
 // **************************************************************************
 
 String _$offlineDriveNoteNotifierHash() =>
-    r'64e5097870fb3f04f1c3731a30321b79b30099b8';
+    r'1e041410365c16977a0fabc4365a7a561eab93ac';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -32,9 +32,9 @@ class _SystemHash {
 
 abstract class _$OfflineDriveNoteNotifier
     extends BuildlessAutoDisposeAsyncNotifier<String> {
-  late final ContentFile file;
+  late final String fileId;
 
-  FutureOr<String> build({required ContentFile file});
+  FutureOr<String> build({required String fileId});
 }
 
 /// See also [OfflineDriveNoteNotifier].
@@ -47,15 +47,15 @@ class OfflineDriveNoteNotifierFamily extends Family<AsyncValue<String>> {
   const OfflineDriveNoteNotifierFamily();
 
   /// See also [OfflineDriveNoteNotifier].
-  OfflineDriveNoteNotifierProvider call({required ContentFile file}) {
-    return OfflineDriveNoteNotifierProvider(file: file);
+  OfflineDriveNoteNotifierProvider call({required String fileId}) {
+    return OfflineDriveNoteNotifierProvider(fileId: fileId);
   }
 
   @override
   OfflineDriveNoteNotifierProvider getProviderOverride(
     covariant OfflineDriveNoteNotifierProvider provider,
   ) {
-    return call(file: provider.file);
+    return call(fileId: provider.fileId);
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -78,9 +78,9 @@ class OfflineDriveNoteNotifierProvider
     extends
         AutoDisposeAsyncNotifierProviderImpl<OfflineDriveNoteNotifier, String> {
   /// See also [OfflineDriveNoteNotifier].
-  OfflineDriveNoteNotifierProvider({required ContentFile file})
+  OfflineDriveNoteNotifierProvider({required String fileId})
     : this._internal(
-        () => OfflineDriveNoteNotifier()..file = file,
+        () => OfflineDriveNoteNotifier()..fileId = fileId,
         from: offlineDriveNoteNotifierProvider,
         name: r'offlineDriveNoteNotifierProvider',
         debugGetCreateSourceHash:
@@ -90,7 +90,7 @@ class OfflineDriveNoteNotifierProvider
         dependencies: OfflineDriveNoteNotifierFamily._dependencies,
         allTransitiveDependencies:
             OfflineDriveNoteNotifierFamily._allTransitiveDependencies,
-        file: file,
+        fileId: fileId,
       );
 
   OfflineDriveNoteNotifierProvider._internal(
@@ -100,16 +100,16 @@ class OfflineDriveNoteNotifierProvider
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.file,
+    required this.fileId,
   }) : super.internal();
 
-  final ContentFile file;
+  final String fileId;
 
   @override
   FutureOr<String> runNotifierBuild(
     covariant OfflineDriveNoteNotifier notifier,
   ) {
-    return notifier.build(file: file);
+    return notifier.build(fileId: fileId);
   }
 
   @override
@@ -117,13 +117,13 @@ class OfflineDriveNoteNotifierProvider
     return ProviderOverride(
       origin: this,
       override: OfflineDriveNoteNotifierProvider._internal(
-        () => create()..file = file,
+        () => create()..fileId = fileId,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        file: file,
+        fileId: fileId,
       ),
     );
   }
@@ -136,13 +136,13 @@ class OfflineDriveNoteNotifierProvider
 
   @override
   bool operator ==(Object other) {
-    return other is OfflineDriveNoteNotifierProvider && other.file == file;
+    return other is OfflineDriveNoteNotifierProvider && other.fileId == fileId;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, file.hashCode);
+    hash = _SystemHash.combine(hash, fileId.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -152,8 +152,8 @@ class OfflineDriveNoteNotifierProvider
 // ignore: unused_element
 mixin OfflineDriveNoteNotifierRef
     on AutoDisposeAsyncNotifierProviderRef<String> {
-  /// The parameter `file` of this provider.
-  ContentFile get file;
+  /// The parameter `fileId` of this provider.
+  String get fileId;
 }
 
 class _OfflineDriveNoteNotifierProviderElement
@@ -166,7 +166,7 @@ class _OfflineDriveNoteNotifierProviderElement
   _OfflineDriveNoteNotifierProviderElement(super.provider);
 
   @override
-  ContentFile get file => (origin as OfflineDriveNoteNotifierProvider).file;
+  String get fileId => (origin as OfflineDriveNoteNotifierProvider).fileId;
 }
 
 // ignore_for_file: type=lint

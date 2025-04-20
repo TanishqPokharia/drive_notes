@@ -1,9 +1,13 @@
+import 'package:drive_notes_app/core/is_online_provider.dart';
 import 'package:drive_notes_app/core/utils/extensions/theme_extensions.dart';
 import 'package:drive_notes_app/core/utils/extensions/responsive_extensions.dart';
+import 'package:drive_notes_app/core/utils/no_params.dart';
 import 'package:drive_notes_app/features/home/presentation/providers/drive_notes_files_notifier/drive_notes_files_notifier.dart';
 import 'package:drive_notes_app/features/home/presentation/widgets/create_note_dialog.dart';
 import 'package:drive_notes_app/features/home/presentation/widgets/delete_note_dialog.dart';
 import 'package:drive_notes_app/features/home/presentation/widgets/profile_dialog.dart';
+import 'package:drive_notes_app/features/offline_sync/domain/usecases/sync_drive_notes.dart';
+import 'package:drive_notes_app/features/offline_sync/presentation/providers/offline_notes_notifier/offline_notes_notifier.dart';
 import 'package:drive_notes_app/main.dart';
 import 'package:drive_notes_app/router/routes.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +16,25 @@ import 'package:go_router/go_router.dart';
 import 'package:drive_notes_app/core/utils/failure.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+final _isSyncingProvider = StateProvider<bool>((ref) => false);
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isOnline = ref.read(isOnlineProvider);
+    final isSyncing = ref.watch(_isSyncingProvider);
+
+    final driveNotesList =
+        isOnline
+            ? ref.watch(driveNotesFilesNotifierProvider)
+            : ref.watch(offlineNotesNotifierProvider);
+
+    if (isOnline) {
+      syncOfflineNotes(context, ref);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Home"),
@@ -38,7 +56,7 @@ class HomeScreen extends ConsumerWidget {
           SizedBox(width: context.rs(20)),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           showDialog(
             context: context,
@@ -48,16 +66,31 @@ class HomeScreen extends ConsumerWidget {
             },
           );
         },
-        child: Icon(Icons.edit_note_rounded, size: context.rs(40)),
+        label: Text("Create"),
+        icon: Icon(Icons.edit_note_rounded, size: context.rs(40)),
       ),
       body: Builder(
         builder: (context) {
-          final driveNotesFiles = ref.watch(driveNotesFilesNotifierProvider);
+          if (isSyncing) {
+            return Center(
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: context.rs(40),
+                    width: context.rs(40),
+                    child: CircularProgressIndicator(),
+                  ),
+                  Text("Syncing offline notes..."),
+                ],
+              ),
+            );
+          }
+
           return SafeArea(
             child: RefreshIndicator(
               onRefresh:
                   () => ref.refresh(driveNotesFilesNotifierProvider.future),
-              child: driveNotesFiles.when(
+              child: driveNotesList.when(
                 skipLoadingOnRefresh: false,
                 data: (files) {
                   if (files == null) {
@@ -166,5 +199,23 @@ class HomeScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  void syncOfflineNotes(BuildContext context, WidgetRef ref) async {
+    final syncNotes = getIt<SyncDriveNotes>();
+    final syncStatus = await syncNotes(NoParams());
+    syncStatus.fold(
+      (failure) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+      },
+      (status) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Sync completed")));
+      },
+    );
+    ref.read(_isSyncingProvider.notifier).update((state) => false);
   }
 }

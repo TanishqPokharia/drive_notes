@@ -14,8 +14,8 @@ class AuthDataSourceImpl implements AuthDataSource {
   @override
   Future<Either<Failure, bool>> isUserSignedIn() async {
     try {
-      final status = await googleSignIn.isSignedIn();
-      return Right(status);
+      final isSignedIn = await googleSignIn.isSignedIn();
+      return Right(isSignedIn);
     } catch (e) {
       return Left(Failure(e.toString()));
     }

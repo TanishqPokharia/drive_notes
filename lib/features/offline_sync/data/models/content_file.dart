@@ -20,4 +20,11 @@ class ContentFile extends File {
       fileName: json['fileName'] as String,
     );
   }
+
+  ContentFile copyWith({String? content, String? fileName}) {
+    return ContentFile(
+      content: content ?? this.content,
+      fileName: fileName ?? this.fileName,
+    );
+  }
 }

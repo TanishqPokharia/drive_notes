@@ -61,51 +61,59 @@ class OfflineSyncRepositoryImpl implements OfflineSyncRepository {
   @override
   Future<Either<Failure, void>> syncNotes() async {
     try {
-      final authenticatedClient = await googleSignIn.authenticatedClient();
-      if (authenticatedClient == null) {
-        return Left(const Failure('User is not authenticated'));
-      }
-      final driveApi = DriveApi(authenticatedClient);
-      final driveNotesFolderId = await homeDataSource.getDriveNotesFolderId();
-
-      return driveNotesFolderId.fold((failure) => Left(failure), (
-        folderId,
-      ) async {
-        if (folderId == null) {
-          return Left(Failure("Drive Notes folder does not exist"));
-        }
-        final files = await repository.getFiles();
-        if (files.isLeft()) {
-          return Left(
-            files.fold(
-              (failure) => failure,
-              (files) => const Failure('No files found'),
-            ),
-          );
-        }
-        final localFiles = files.fold((failure) => <File>[], (files) => files);
-        for (final file in localFiles) {
-          final contentFile = file as ContentFile;
-          final fileUploadData = File(
-            name: contentFile.name,
-            mimeType: "text/plain",
-            parents: [folderId],
-          );
-          final media = Media(
-            Stream.fromIterable([utf8.encode(contentFile.content)]),
-            contentFile.content.length,
-          );
-
-          final driveFile = await driveApi.files.create(
-            fileUploadData,
-            uploadMedia: media,
-          );
-          if (driveFile.id != null) {
-            await repository.removeFile(file);
+      final storedFiles = await repository.getFiles();
+      return await storedFiles.fold(
+        (failure) {
+          return Left(failure);
+        },
+        (files) async {
+          if (files.isEmpty) {
+            return Right(());
           }
-        }
-        return const Right(());
-      });
+
+          final authenticatedClient = await googleSignIn.authenticatedClient();
+          if (authenticatedClient == null) {
+            return Left(const Failure('User is not authenticated'));
+          }
+          final driveApi = DriveApi(authenticatedClient);
+          final driveNotesFolderId =
+              await homeDataSource.getDriveNotesFolderId();
+
+          return driveNotesFolderId.fold((failure) => Left(failure), (
+            folderId,
+          ) async {
+            if (folderId == null) {
+              return Left(Failure("Drive Notes folder does not exist"));
+            }
+
+            final localFiles = storedFiles.fold(
+              (failure) => <File>[],
+              (files) => files,
+            );
+            for (final file in localFiles) {
+              final contentFile = file as ContentFile;
+              final fileUploadData = File(
+                name: contentFile.fileName,
+                mimeType: "text/plain",
+                parents: [folderId],
+              );
+              final media = Media(
+                Stream.fromIterable([utf8.encode(contentFile.content)]),
+                contentFile.content.length,
+              );
+
+              final driveFile = await driveApi.files.create(
+                fileUploadData,
+                uploadMedia: media,
+              );
+              if (driveFile.id != null) {
+                await repository.removeFile(file);
+              }
+            }
+            return const Right(());
+          });
+        },
+      );
     } catch (e) {
       return Left(Failure(e.toString()));
     }
@@ -113,13 +121,13 @@ class OfflineSyncRepositoryImpl implements OfflineSyncRepository {
 
   @override
   Future<Either<Failure, void>> updateNoteInLocal(
-    File file,
-    File newFile,
+    String fileId,
+    String content,
   ) async {
     final files = await repository.getFiles();
     return files.fold((failure) => Left(failure), (existingFiles) {
-      if (existingFiles.any((f) => f.id == file.id)) {
-        return repository.updateFile(file, newFile);
+      if (existingFiles.any((f) => f.id == fileId)) {
+        return repository.updateFile(fileId, content);
       } else {
         return Left(const Failure('File does not exist in local storage'));
       }

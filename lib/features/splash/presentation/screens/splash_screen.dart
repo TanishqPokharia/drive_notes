@@ -1,29 +1,27 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:drive_notes_app/core/is_online_provider.dart';
 import 'package:drive_notes_app/core/utils/extensions/responsive_extensions.dart';
 import 'package:drive_notes_app/core/utils/no_params.dart';
 import 'package:drive_notes_app/features/auth/domain/usecases/get_previous_user.dart';
 import 'package:drive_notes_app/router/routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key, required this.getPreviousUser});
   final GetPreviousUser getPreviousUser;
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
     Future.delayed(Duration(milliseconds: 800), () async {
       final isOnline = await isDeviceOnline();
-      if (!isOnline) {
-        if (mounted) {
-          context.goNamed(AppRoutes.offlineHomeRoute);
-        }
-      }
+      ref.read(isOnlineProvider.notifier).update((state) => isOnline);
       final previousUser = await widget.getPreviousUser(NoParams());
       previousUser.fold(
         (failure) {

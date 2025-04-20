@@ -7,5 +7,7 @@ abstract class LocalFilesRepository {
   Future<Either<Failure, void>> removeFile(File file);
   Future<Either<Failure, List<File>>> getFiles();
   Future<Either<Failure, void>> clearFiles();
-  Future<Either<Failure, void>> updateFile(File file, File newFile);
+  Future<Either<Failure, void>> updateFile(String fileId, String content);
+  Future<Either<Failure, void>> storeFile(File file);
+  Future<Either<Failure, String>> getFileContent(String fileId);
 }

@@ -1,6 +1,7 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:drive_notes_app/core/is_online_provider.dart';
 import 'package:drive_notes_app/core/utils/extensions/theme_extensions.dart';
 import 'package:drive_notes_app/features/notes/presentation/providers/note_notifier/note_notifier.dart';
+import 'package:drive_notes_app/features/offline_sync/presentation/providers/offline_drive_note_notifier/offline_drive_note_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drive_notes_app/core/utils/extensions/responsive_extensions.dart';
@@ -35,7 +36,12 @@ class _NoteScreenState extends ConsumerState<NoteScreen> {
   @override
   Widget build(BuildContext context) {
     final noteNotifier = noteNotifierProvider(noteId: widget.fileId);
-    final noteState = ref.watch(noteNotifier);
+    final offlineNoteNotifier = offlineDriveNoteNotifierProvider(
+      fileId: widget.fileId,
+    );
+    final isOnline = ref.read(isOnlineProvider);
+    final noteState =
+        isOnline ? ref.watch(noteNotifier) : ref.watch(offlineNoteNotifier);
     return IgnorePointer(
       ignoring: noteState.isLoading,
       child: Scaffold(
@@ -45,21 +51,10 @@ class _NoteScreenState extends ConsumerState<NoteScreen> {
             width: double.infinity,
             child: FilledButton(
               onPressed: () async {
-                final updateSuccess = await ref
-                    .read(noteNotifier.notifier)
-                    .updateNoteContent(_textEditingController.text);
-                String message = "";
-                if (updateSuccess) {
-                  if (context.mounted) {
-                    message = "Note updated successfully";
-                  } else {
-                    message = "Note update failed";
-                  }
-                }
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(message)));
+                if (isOnline) {
+                  await updateDriveNote(noteNotifier);
+                } else {
+                  updateOfflineNote(offlineNoteNotifier);
                 }
               },
               child: Text("Save"),
@@ -161,6 +156,49 @@ class _NoteScreenState extends ConsumerState<NoteScreen> {
             ),
           ],
         );
+      },
+    );
+  }
+
+  Future<void> updateDriveNote(NoteNotifierProvider noteNotifier) async {
+    final updateSuccess = await ref
+        .read(noteNotifier.notifier)
+        .updateNoteContent(_textEditingController.text);
+    String message = "";
+    if (updateSuccess) {
+      if (context.mounted) {
+        message = "Note updated successfully";
+      } else {
+        message = "Note update failed";
+      }
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  void updateOfflineNote(
+    OfflineDriveNoteNotifierProvider offlineNoteNotifier,
+  ) async {
+    final updateStatus = await ref
+        .read(offlineNoteNotifier.notifier)
+        .updateContent(widget.fileName, _textEditingController.text);
+    updateStatus.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(failure.message)));
+        }
+      },
+      (success) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text("Note updated successfully")));
+        }
       },
     );
   }

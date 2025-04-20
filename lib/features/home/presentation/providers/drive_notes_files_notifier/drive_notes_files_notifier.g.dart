@@ -7,7 +7,7 @@ part of 'drive_notes_files_notifier.dart';
 // **************************************************************************
 
 String _$driveNotesFilesNotifierHash() =>
-    r'e6a4ea9c7d124f4d5f1c85d49eadcd44aa59953a';
+    r'110e4f7a0db7d136de9ded7547a9757d796f4e00';
 
 /// See also [DriveNotesFilesNotifier].
 @ProviderFor(DriveNotesFilesNotifier)

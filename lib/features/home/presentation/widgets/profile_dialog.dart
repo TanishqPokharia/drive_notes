@@ -18,8 +18,8 @@ class ProfileDialog extends ConsumerWidget {
     return Dialog(
       child: Container(
         padding: EdgeInsets.all(context.rs(20)),
-        width: context.rs(400),
-        height: context.rs(400),
+        width: context.rs(500),
+        height: context.rs(500),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -32,14 +32,19 @@ class ProfileDialog extends ConsumerWidget {
                 ),
               ),
             Column(
+              spacing: 10,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   googleSignIn.currentUser?.email ?? "No email",
                   style: context.textTheme.titleMedium,
+                  textAlign: TextAlign.center,
                 ),
                 Text(
                   googleSignIn.currentUser?.displayName ?? "No name",
                   style: context.textTheme.titleMedium,
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),

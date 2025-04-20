@@ -78,7 +78,7 @@ void main() {
         final driveNotesFilesNotifier = container.read(
           driveNotesFilesNotifierProvider.notifier,
         );
-        driveNotesFilesNotifier.addFile(File());
+        driveNotesFilesNotifier.addNote(File());
 
         // Assert
         expect(driveNotesFilesNotifier.state, isA<AsyncData<List<File>?>>());
@@ -319,7 +319,7 @@ void main() {
         final driveNotesFilesNotifier = container.read(
           driveNotesFilesNotifierProvider.notifier,
         );
-        driveNotesFilesNotifier.addFile(File());
+        driveNotesFilesNotifier.addNote(File());
 
         // Assert
         expect(driveNotesFilesNotifier.state, isA<AsyncData<List<File>?>>());

@@ -11,13 +11,13 @@ class UpdateNoteInLocal implements UseCase<void, UpdateNoteInLocalParams> {
 
   @override
   Future<Either<Failure, void>> call(UpdateNoteInLocalParams params) {
-    return repository.updateNoteInLocal(params.file, params.newFile);
+    return repository.updateNoteInLocal(params.fileId, params.content);
   }
 }
 
 class UpdateNoteInLocalParams {
-  final File file;
-  final File newFile;
+  final String fileId;
+  final String content;
 
-  UpdateNoteInLocalParams(this.file, this.newFile);
+  UpdateNoteInLocalParams(this.fileId, this.content);
 }

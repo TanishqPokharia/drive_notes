@@ -1,7 +1,10 @@
+import 'package:drive_notes_app/core/is_online_provider.dart';
 import 'package:drive_notes_app/core/utils/extensions/responsive_extensions.dart';
 import 'package:drive_notes_app/core/utils/extensions/theme_extensions.dart';
 import 'package:drive_notes_app/features/home/presentation/providers/create_note_notifier/create_note_notifier.dart';
 import 'package:drive_notes_app/features/home/presentation/providers/drive_notes_files_notifier/drive_notes_files_notifier.dart';
+import 'package:drive_notes_app/features/offline_sync/data/models/content_file.dart';
+import 'package:drive_notes_app/features/offline_sync/presentation/providers/offline_notes_notifier/offline_notes_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,14 +34,15 @@ class _CreateNoteDialogState extends ConsumerState<CreateNoteDialog> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(createNoteNotifierProvider);
+    final isOnline = ref.read(isOnlineProvider);
     return Dialog(
       backgroundColor: context.theme.dialogTheme.backgroundColor,
       child: Container(
         margin: EdgeInsets.all(context.rs(20)),
-        height: context.rs(300),
-        width: context.rs(300),
+        height: context.rs(220),
+        width: context.rs(220),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,39 +84,14 @@ class _CreateNoteDialogState extends ConsumerState<CreateNoteDialog> {
                         ),
                         TextButton(
                           onPressed: () async {
-                            if (_textEditingController.text.isNotEmpty) {
-                              final createNoteStatus = await ref
-                                  .read(createNoteNotifierProvider.notifier)
-                                  .createNote(_textEditingController.text);
-                              createNoteStatus.fold(
-                                (failure) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(failure.message),
-                                      backgroundColor:
-                                          context.theme.colorScheme.error,
-                                    ),
-                                  );
-                                },
-                                (file) {
-                                  Navigator.pop(context);
-                                  ref
-                                      .read(
-                                        driveNotesFilesNotifierProvider
-                                            .notifier,
-                                      )
-                                      .addFile(file);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          "Note created successfully",
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                              );
+                            if (_textEditingController.text.isEmpty) {
+                              return;
+                            }
+
+                            if (isOnline) {
+                              createDriveNote();
+                            } else {
+                              createOfflineNote();
                             }
                           },
                           child: Text(
@@ -127,6 +106,57 @@ class _CreateNoteDialogState extends ConsumerState<CreateNoteDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  void createDriveNote() async {
+    final createNoteStatus = await ref
+        .read(createNoteNotifierProvider.notifier)
+        .createNote(_textEditingController.text);
+    createNoteStatus.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: context.theme.colorScheme.error,
+          ),
+        );
+      },
+      (file) {
+        Navigator.pop(context);
+        ref.read(driveNotesFilesNotifierProvider.notifier).addNote(file);
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text("Note created successfully")));
+        }
+      },
+    );
+  }
+
+  void createOfflineNote() async {
+    final offlineNoteStatus = await ref
+        .read(offlineNotesNotifierProvider.notifier)
+        .addNote(
+          ContentFile(content: "", fileName: _textEditingController.text),
+        );
+    offlineNoteStatus.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: context.theme.colorScheme.error,
+          ),
+        );
+      },
+      (file) {
+        Navigator.pop(context);
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text("Note created successfully")));
+        }
+      },
     );
   }
 }

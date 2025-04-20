@@ -7,7 +7,6 @@ abstract class LocalFilesDataSource {
   Future<Either<Failure, void>> removeFile(String fileId);
   Future<Either<Failure, List<String>>> getFiles();
   Future<Either<Failure, void>> clearFiles();
-  Future<Either<Failure, void>> updateFile(String fileId, String newFileId);
 }
 
 class SharedPreferencesStorageFilesDataSourceImpl
@@ -83,28 +82,28 @@ class SharedPreferencesStorageFilesDataSourceImpl
     }
   }
 
-  @override
-  Future<Either<Failure, void>> updateFile(
-    String fileId,
-    String newFileId,
-  ) async {
-    try {
-      final SharedPreferences sp = await SharedPreferences.getInstance();
+  // @override
+  // Future<Either<Failure, void>> updateFile(
+  //   String fileId,
+  //   String newFileId,
+  // ) async {
+  //   try {
+  //     final SharedPreferences sp = await SharedPreferences.getInstance();
 
-      final files = sp.getStringList('offline_files');
-      if (files != null) {
-        files[files.indexOf(fileId)] = newFileId;
-        final updated = await sp.setStringList('offline_files', files);
-        if (updated) {
-          return const Right(());
-        } else {
-          return Left(Failure('Failed to update file'));
-        }
-      } else {
-        return const Right(());
-      }
-    } catch (e) {
-      return Left(Failure(e.toString()));
-    }
-  }
+  //     final files = sp.getStringList('offline_files');
+  //     if (files != null) {
+  //       files[files.indexOf(fileId)] = newFileId;
+  //       final updated = await sp.setStringList('offline_files', files);
+  //       if (updated) {
+  //         return const Right(());
+  //       } else {
+  //         return Left(Failure('Failed to update file'));
+  //       }
+  //     } else {
+  //       return const Right(());
+  //     }
+  //   } catch (e) {
+  //     return Left(Failure(e.toString()));
+  //   }
+  // }
 }
