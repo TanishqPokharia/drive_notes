@@ -96,19 +96,12 @@ DriveNotes follows a clean architecture structure:
 lib/
 ├── features/            # Feature modules (notes, auth, etc.)
 ├── core/                # Shared utilities and constants
-├── services/            # Drive, Auth, and Local DB services
-├── theme/               # Theme data and switch logic
-├── routing/             # GoRouter setup
+├── themes/               # Theme data and switch logic
+├── router/             # GoRouter setup
 ├── main.dart            # App entry point
 ```
 
----
 
-## 📌 Contribution
-
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
----
 
 ## 📝 License
 
