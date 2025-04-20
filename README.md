@@ -1,6 +1,7 @@
 # 📒 DriveNotes
 
 Video ->  https://drive.google.com/file/d/1SsxAn8s6yye14GSv4fti60soxyTQj-wO/view?usp=sharing
+
 Offline Sync Video -> https://drive.google.com/file/d/1qH7bjgFRepyJdRmQodQwa86abk2WGTVy/view?usp=sharing
 
 **DriveNotes** is a Flutter application that allows users to seamlessly create, read, update, and delete text-based notes stored directly in their **Google Drive**. Notes are stored inside a dedicated folder called `DriveNotes`, offering a minimal and cloud-synced alternative to traditional note-taking apps.
