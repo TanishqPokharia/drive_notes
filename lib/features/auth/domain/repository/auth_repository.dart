@@ -7,4 +7,5 @@ abstract class AuthRepository {
   Future<Either<Failure, bool>> isUserSignedIn();
   Future<Either<Failure, GoogleSignInAccount?>> getPreviousUser();
   Future<Either<Failure, void>> signOutUser();
+  Future<Either<Failure, String>> getPreviousOfflineUserEmail();
 }

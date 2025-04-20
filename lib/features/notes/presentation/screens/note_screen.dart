@@ -9,8 +9,14 @@ import 'package:drive_notes_app/core/utils/extensions/responsive_extensions.dart
 final _enableEditingProvider = StateProvider((ref) => false);
 
 class NoteScreen extends ConsumerStatefulWidget {
-  const NoteScreen({super.key, required this.fileName, required this.fileId});
+  const NoteScreen(
+    this.email, {
+    super.key,
+    required this.fileName,
+    required this.fileId,
+  });
 
+  final String? email;
   final String fileName;
   final String fileId;
 
@@ -37,7 +43,8 @@ class _NoteScreenState extends ConsumerState<NoteScreen> {
   Widget build(BuildContext context) {
     final noteNotifier = noteNotifierProvider(noteId: widget.fileId);
     final offlineNoteNotifier = offlineDriveNoteNotifierProvider(
-      fileId: widget.fileId,
+      fileId: widget.fileName,
+      email: widget.email ?? "",
     );
     final isOnline = ref.read(isOnlineProvider);
     final noteState =
@@ -83,8 +90,11 @@ class _NoteScreenState extends ConsumerState<NoteScreen> {
                   ),
                 );
               },
-              error:
-                  (error, stackTrace) => Center(child: Text(error.toString())),
+              error: (error, stackTrace) {
+                print(error);
+                print(stackTrace);
+                return Center(child: Text(error.toString()));
+              },
               loading: () => Center(child: CircularProgressIndicator()),
             ),
           ),
@@ -184,7 +194,11 @@ class _NoteScreenState extends ConsumerState<NoteScreen> {
   ) async {
     final updateStatus = await ref
         .read(offlineNoteNotifier.notifier)
-        .updateContent(widget.fileName, _textEditingController.text);
+        .updateContent(
+          widget.email ?? "",
+          widget.fileName,
+          _textEditingController.text,
+        );
     updateStatus.fold(
       (failure) {
         if (mounted) {

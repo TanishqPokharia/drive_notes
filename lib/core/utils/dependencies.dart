@@ -1,6 +1,7 @@
 import 'package:drive_notes_app/features/auth/data/datasource/auth_datasource.dart';
 import 'package:drive_notes_app/features/auth/data/repository/auth_repository_impl.dart';
 import 'package:drive_notes_app/features/auth/domain/repository/auth_repository.dart';
+import 'package:drive_notes_app/features/auth/domain/usecases/get_previous_offline_user_email.dart';
 import 'package:drive_notes_app/features/auth/domain/usecases/get_previous_user.dart';
 import 'package:drive_notes_app/features/auth/domain/usecases/is_user_signed_in.dart';
 import 'package:drive_notes_app/features/auth/domain/usecases/sign_in_user.dart';
@@ -47,8 +48,11 @@ void registerDatasources() {
 }
 
 void registerRepositories() {
+  getIt.registerLazySingleton<LocalFilesRepository>(
+    () => LocalFilesRepositoryImpl(getIt()),
+  );
   getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(getIt()),
+    () => AuthRepositoryImpl(getIt(), getIt()),
   );
   getIt.registerLazySingleton<HomeRepository>(
     () => HomeRepositoryImpl(getIt()),
@@ -56,9 +60,7 @@ void registerRepositories() {
   getIt.registerLazySingleton<NoteRepository>(
     () => NoteRepositoryImpl(getIt()),
   );
-  getIt.registerLazySingleton<LocalFilesRepository>(
-    () => LocalFilesRepositoryImpl(getIt()),
-  );
+
   getIt.registerLazySingleton<OfflineSyncRepository>(
     () => OfflineSyncRepositoryImpl(getIt(), getIt()),
   );
@@ -70,6 +72,7 @@ void registerUsecases() {
   getIt.registerFactory(() => IsUserSignedIn(getIt()));
   getIt.registerFactory(() => GetPreviousUser(getIt()));
   getIt.registerFactory(() => SignOutUser(getIt()));
+  getIt.registerFactory(() => GetPreviousOfflineUserEmail(getIt()));
 
   // home
   getIt.registerFactory(() => CreateDriveNotesFolder(getIt()));

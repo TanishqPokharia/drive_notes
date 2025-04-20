@@ -27,7 +27,8 @@ final class AppRouter {
         path: "/home",
         name: AppRoutes.homeRoute,
         pageBuilder: (context, state) {
-          return MaterialPage(child: HomeScreen());
+          final email = state.uri.queryParameters["email"];
+          return MaterialPage(child: HomeScreen(email));
         },
         routes: [
           GoRoute(
@@ -36,7 +37,9 @@ final class AppRouter {
             pageBuilder: (context, state) {
               final fileName = state.pathParameters["fileName"];
               final fileId = state.pathParameters["fileId"];
+              final email = state.uri.queryParameters["email"];
               final child = NoteScreen(
+                email,
                 fileName: fileName ?? "",
                 fileId: fileId ?? "",
               );

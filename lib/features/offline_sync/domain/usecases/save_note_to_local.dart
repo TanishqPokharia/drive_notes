@@ -11,12 +11,13 @@ class SaveNoteToLocal implements UseCase<void, SaveNoteToLocalParams> {
 
   @override
   Future<Either<Failure, void>> call(SaveNoteToLocalParams params) async {
-    return await repository.saveNoteToLocal(params.file);
+    return await repository.saveNoteToLocal(params.email, params.file);
   }
 }
 
 class SaveNoteToLocalParams {
   final File file;
+  final String email;
 
-  SaveNoteToLocalParams({required this.file});
+  SaveNoteToLocalParams({required this.email, required this.file});
 }

@@ -17,23 +17,23 @@ class OfflineSyncRepositoryImpl implements OfflineSyncRepository {
   OfflineSyncRepositoryImpl(this.repository, this.homeDataSource);
 
   @override
-  Future<Either<Failure, void>> clearLocalFiles() async {
-    return repository.clearFiles();
+  Future<Either<Failure, void>> clearLocalFiles(String email) async {
+    return repository.clearFiles(email);
   }
 
   @override
-  Future<Either<Failure, void>> deleteNoteFromLocal(File file) {
-    return repository.removeFile(file);
+  Future<Either<Failure, void>> deleteNoteFromLocal(String email, File file) {
+    return repository.removeFile(email, file);
   }
 
   @override
-  Future<Either<Failure, List<File>>> getLocalFiles() {
-    return repository.getFiles();
+  Future<Either<Failure, List<File>>> getLocalFiles(String email) {
+    return repository.getFiles(email);
   }
 
   @override
-  Future<Either<Failure, bool>> offlineNotesExist() {
-    return repository.getFiles().then((result) {
+  Future<Either<Failure, bool>> offlineNotesExist(String email) {
+    return repository.getFiles(email).then((result) {
       return result.fold(
         (failure) => Left(failure),
         (files) => Right(files.isNotEmpty),
@@ -42,33 +42,33 @@ class OfflineSyncRepositoryImpl implements OfflineSyncRepository {
   }
 
   @override
-  Future<Either<Failure, void>> saveNoteToLocal(File file) async {
-    final files = await repository.getFiles();
+  Future<Either<Failure, void>> saveNoteToLocal(String email, File file) async {
+    final files = await repository.getFiles(email);
     return files.fold((failure) => Left(failure), (existingFiles) {
-      if (existingFiles.any((f) => f.id == file.id)) {
+      if (existingFiles.any((f) => (f as ContentFile).fileName == file.id)) {
         return Left(const Failure('File already exists in local storage'));
       } else {
-        return repository.storeFiles([...existingFiles, file]);
+        return repository.storeFiles(email, [...existingFiles, file]);
       }
     });
   }
 
   @override
-  Future<Either<Failure, void>> storeFiles(List<File> files) {
-    return repository.storeFiles(files);
+  Future<Either<Failure, void>> storeFiles(String email, List<File> files) {
+    return repository.storeFiles(email, files);
   }
 
   @override
-  Future<Either<Failure, void>> syncNotes() async {
+  Future<Either<Failure, bool>> syncNotes(String email) async {
     try {
-      final storedFiles = await repository.getFiles();
+      final storedFiles = await repository.getFiles(email);
       return await storedFiles.fold(
         (failure) {
           return Left(failure);
         },
         (files) async {
           if (files.isEmpty) {
-            return Right(());
+            return Right((false));
           }
 
           final authenticatedClient = await googleSignIn.authenticatedClient();
@@ -107,10 +107,10 @@ class OfflineSyncRepositoryImpl implements OfflineSyncRepository {
                 uploadMedia: media,
               );
               if (driveFile.id != null) {
-                await repository.removeFile(file);
+                await repository.removeFile(email, file);
               }
             }
-            return const Right(());
+            return const Right((true));
           });
         },
       );
@@ -121,13 +121,14 @@ class OfflineSyncRepositoryImpl implements OfflineSyncRepository {
 
   @override
   Future<Either<Failure, void>> updateNoteInLocal(
+    String email,
     String fileId,
     String content,
   ) async {
-    final files = await repository.getFiles();
+    final files = await repository.getFiles(email);
     return files.fold((failure) => Left(failure), (existingFiles) {
-      if (existingFiles.any((f) => f.id == fileId)) {
-        return repository.updateFile(fileId, content);
+      if (existingFiles.any((f) => (f as ContentFile).fileName == fileId)) {
+        return repository.updateFile(email, fileId, content);
       } else {
         return Left(const Failure('File does not exist in local storage'));
       }

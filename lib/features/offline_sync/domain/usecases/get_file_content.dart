@@ -11,12 +11,13 @@ class GetOfflineFileContent
 
   @override
   Future<Either<Failure, String>> call(GetOfflineFileContentParams params) {
-    return repository.getFileContent(params.fileId);
+    return repository.getFileContent(params.email, params.fileId);
   }
 }
 
 class GetOfflineFileContentParams {
+  final String email;
   final String fileId;
 
-  GetOfflineFileContentParams(this.fileId);
+  GetOfflineFileContentParams(this.email, this.fileId);
 }

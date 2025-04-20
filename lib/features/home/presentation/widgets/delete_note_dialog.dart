@@ -5,13 +5,14 @@ import 'package:drive_notes_app/features/home/presentation/providers/drive_notes
 import 'package:drive_notes_app/features/offline_sync/presentation/providers/offline_notes_notifier/offline_notes_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:googleapis/drive/v3.dart';
 
 final _isDeletingProvider = StateProvider<bool>((ref) => false);
 
 class DeleteNoteDialog extends ConsumerWidget {
-  const DeleteNoteDialog({super.key, required this.file});
-
+  const DeleteNoteDialog(this.email, {super.key, required this.file});
+  final String? email;
   final File file;
 
   @override
@@ -57,6 +58,12 @@ class DeleteNoteDialog extends ConsumerWidget {
             onPressed: () async {
               ref.read(_isDeletingProvider.notifier).update((state) => true);
 
+              if (isOnline) {
+                deleteDriveNote(context, ref);
+              } else {
+                deleteOfflineNote(context, ref);
+              }
+
               ref.read(_isDeletingProvider.notifier).update((state) => false);
             },
             child: Text("Delete"),
@@ -81,13 +88,16 @@ class DeleteNoteDialog extends ConsumerWidget {
           ref
               .read(driveNotesFilesNotifierProvider.notifier)
               .removeFromCurrentFiles(file.id ?? "");
-          Navigator.of(context).pop();
+          context.pop();
         }
       },
     );
   }
 
   void deleteOfflineNote(BuildContext context, WidgetRef ref) {
-    ref.read(offlineNotesNotifierProvider.notifier).deleteNote(file);
+    ref
+        .read(offlineNotesNotifierProvider(email: email ?? "").notifier)
+        .deleteNote(email ?? "", file);
+    context.pop();
   }
 }

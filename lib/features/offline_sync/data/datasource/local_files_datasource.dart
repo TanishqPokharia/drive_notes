@@ -3,21 +3,21 @@ import 'package:drive_notes_app/core/utils/failure.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class LocalFilesDataSource {
-  Future<Either<Failure, void>> storeList(List<String> fileData);
-  Future<Either<Failure, void>> removeFile(String fileId);
-  Future<Either<Failure, List<String>>> getFiles();
-  Future<Either<Failure, void>> clearFiles();
+  Future<Either<Failure, void>> storeList(String email, List<String> fileData);
+  Future<Either<Failure, void>> removeFile(String email, String fileId);
+  Future<Either<Failure, List<String>>> getFiles(String email);
+  Future<Either<Failure, void>> clearFiles(String email);
 }
 
 class SharedPreferencesStorageFilesDataSourceImpl
     implements LocalFilesDataSource {
   SharedPreferencesStorageFilesDataSourceImpl();
   @override
-  Future<Either<Failure, void>> clearFiles() async {
+  Future<Either<Failure, void>> clearFiles(String email) async {
     try {
       final SharedPreferences sp = await SharedPreferences.getInstance();
 
-      final deleted = await sp.remove('offline_files');
+      final deleted = await sp.setStringList(email, []);
       if (deleted) {
         return const Right(());
       } else {
@@ -29,11 +29,11 @@ class SharedPreferencesStorageFilesDataSourceImpl
   }
 
   @override
-  Future<Either<Failure, List<String>>> getFiles() async {
+  Future<Either<Failure, List<String>>> getFiles(String email) async {
     try {
       final SharedPreferences sp = await SharedPreferences.getInstance();
 
-      final files = sp.getStringList('offline_files');
+      final files = sp.getStringList(email);
       if (files != null) {
         return Right(files);
       } else {
@@ -45,14 +45,14 @@ class SharedPreferencesStorageFilesDataSourceImpl
   }
 
   @override
-  Future<Either<Failure, void>> removeFile(String fileId) async {
+  Future<Either<Failure, void>> removeFile(String email, String fileId) async {
     try {
       final SharedPreferences sp = await SharedPreferences.getInstance();
 
-      final files = sp.getStringList('offline_files');
+      final files = sp.getStringList(email);
       if (files != null) {
         files.remove(fileId);
-        final updated = await sp.setStringList('offline_files', files);
+        final updated = await sp.setStringList(email, files);
         if (updated) {
           return const Right(());
         } else {
@@ -67,11 +67,14 @@ class SharedPreferencesStorageFilesDataSourceImpl
   }
 
   @override
-  Future<Either<Failure, void>> storeList(List<String> fileData) async {
+  Future<Either<Failure, void>> storeList(
+    String email,
+    List<String> fileData,
+  ) async {
     try {
       final SharedPreferences sp = await SharedPreferences.getInstance();
 
-      final stored = await sp.setStringList('offline_files', fileData);
+      final stored = await sp.setStringList(email, fileData);
       if (stored) {
         return const Right(());
       } else {
@@ -81,29 +84,4 @@ class SharedPreferencesStorageFilesDataSourceImpl
       return Left(Failure(e.toString()));
     }
   }
-
-  // @override
-  // Future<Either<Failure, void>> updateFile(
-  //   String fileId,
-  //   String newFileId,
-  // ) async {
-  //   try {
-  //     final SharedPreferences sp = await SharedPreferences.getInstance();
-
-  //     final files = sp.getStringList('offline_files');
-  //     if (files != null) {
-  //       files[files.indexOf(fileId)] = newFileId;
-  //       final updated = await sp.setStringList('offline_files', files);
-  //       if (updated) {
-  //         return const Right(());
-  //       } else {
-  //         return Left(Failure('Failed to update file'));
-  //       }
-  //     } else {
-  //       return const Right(());
-  //     }
-  //   } catch (e) {
-  //     return Left(Failure(e.toString()));
-  //   }
-  // }
 }

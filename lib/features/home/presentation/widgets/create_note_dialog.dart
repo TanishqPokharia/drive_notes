@@ -10,7 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class CreateNoteDialog extends ConsumerStatefulWidget {
-  const CreateNoteDialog({super.key});
+  const CreateNoteDialog(this.email, {super.key});
+  final String? email;
 
   @override
   ConsumerState<CreateNoteDialog> createState() => _CreateNoteDialogState();
@@ -91,7 +92,7 @@ class _CreateNoteDialogState extends ConsumerState<CreateNoteDialog> {
                             if (isOnline) {
                               createDriveNote();
                             } else {
-                              createOfflineNote();
+                              createOfflineNote(widget.email ?? "");
                             }
                           },
                           child: Text(
@@ -134,14 +135,18 @@ class _CreateNoteDialogState extends ConsumerState<CreateNoteDialog> {
     );
   }
 
-  void createOfflineNote() async {
+  void createOfflineNote(String email) async {
+    final note = ContentFile(
+      content: "",
+      fileName: _textEditingController.text,
+    );
+
     final offlineNoteStatus = await ref
-        .read(offlineNotesNotifierProvider.notifier)
-        .addNote(
-          ContentFile(content: "", fileName: _textEditingController.text),
-        );
+        .read(offlineNotesNotifierProvider(email: email).notifier)
+        .addNote(email, note);
     offlineNoteStatus.fold(
       (failure) {
+        context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(failure.message),
@@ -150,7 +155,7 @@ class _CreateNoteDialogState extends ConsumerState<CreateNoteDialog> {
         );
       },
       (file) {
-        Navigator.pop(context);
+        context.pop();
         if (context.mounted) {
           ScaffoldMessenger.of(
             context,

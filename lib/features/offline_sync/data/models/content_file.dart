@@ -9,6 +9,7 @@ class ContentFile extends File {
   @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = super.toJson();
+    data['fileName'] = fileName;
     data['content'] = content;
     return data;
   }

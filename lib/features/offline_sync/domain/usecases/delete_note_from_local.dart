@@ -11,12 +11,12 @@ class DeleteNoteFromLocal implements UseCase<void, DeleteNoteFromLocalParams> {
 
   @override
   Future<Either<Failure, void>> call(DeleteNoteFromLocalParams params) async {
-    return await repository.deleteNoteFromLocal(params.file);
+    return await repository.deleteNoteFromLocal(params.email, params.file);
   }
 }
 
 class DeleteNoteFromLocalParams {
+  final String email;
   final File file;
-
-  DeleteNoteFromLocalParams(this.file);
+  DeleteNoteFromLocalParams(this.email, this.file);
 }

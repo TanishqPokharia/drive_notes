@@ -1,11 +1,11 @@
 import 'package:drive_notes_app/core/is_online_provider.dart';
 import 'package:drive_notes_app/core/utils/extensions/theme_extensions.dart';
 import 'package:drive_notes_app/core/utils/extensions/responsive_extensions.dart';
-import 'package:drive_notes_app/core/utils/no_params.dart';
 import 'package:drive_notes_app/features/home/presentation/providers/drive_notes_files_notifier/drive_notes_files_notifier.dart';
 import 'package:drive_notes_app/features/home/presentation/widgets/create_note_dialog.dart';
 import 'package:drive_notes_app/features/home/presentation/widgets/delete_note_dialog.dart';
 import 'package:drive_notes_app/features/home/presentation/widgets/profile_dialog.dart';
+import 'package:drive_notes_app/features/offline_sync/data/models/content_file.dart';
 import 'package:drive_notes_app/features/offline_sync/domain/usecases/sync_drive_notes.dart';
 import 'package:drive_notes_app/features/offline_sync/presentation/providers/offline_notes_notifier/offline_notes_notifier.dart';
 import 'package:drive_notes_app/main.dart';
@@ -13,27 +13,43 @@ import 'package:drive_notes_app/router/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:drive_notes_app/core/utils/failure.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 final _isSyncingProvider = StateProvider<bool>((ref) => false);
 
-class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen(this.email, {super.key});
+  final String? email;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final isOnline = ref.read(isOnlineProvider);
+      if (isOnline) {
+        if (mounted) {
+          syncOfflineNotes(context, ref, googleSignIn.currentUser?.email ?? "");
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isOnline = ref.read(isOnlineProvider);
     final isSyncing = ref.watch(_isSyncingProvider);
 
     final driveNotesList =
         isOnline
             ? ref.watch(driveNotesFilesNotifierProvider)
-            : ref.watch(offlineNotesNotifierProvider);
-
-    if (isOnline) {
-      syncOfflineNotes(context, ref);
-    }
+            : ref.watch(
+              offlineNotesNotifierProvider(email: widget.email ?? ""),
+            );
 
     return Scaffold(
       appBar: AppBar(
@@ -53,6 +69,11 @@ class HomeScreen extends ConsumerWidget {
                 identity: googleSignIn.currentUser!,
               ),
             ),
+          if (widget.email != null)
+            SizedBox(
+              width: context.rs(200),
+              child: Text(widget.email ?? "", overflow: TextOverflow.ellipsis),
+            ),
           SizedBox(width: context.rs(20)),
         ],
       ),
@@ -62,7 +83,7 @@ class HomeScreen extends ConsumerWidget {
             context: context,
             barrierDismissible: false,
             builder: (context) {
-              return CreateNoteDialog();
+              return CreateNoteDialog(widget.email);
             },
           );
         },
@@ -72,8 +93,12 @@ class HomeScreen extends ConsumerWidget {
       body: Builder(
         builder: (context) {
           if (isSyncing) {
-            return Center(
+            return SizedBox(
+              width: double.infinity,
+              height: double.infinity,
               child: Column(
+                spacing: 20,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
                     height: context.rs(40),
@@ -133,7 +158,9 @@ class HomeScreen extends ConsumerWidget {
                       height: double.infinity,
                       child: Center(
                         child: Text(
-                          "No text files currently in DriveNotes folder, please create one",
+                          isOnline
+                              ? "No text files currently in DriveNotes folder, please create one"
+                              : "No files currently in your offline notes",
                           textAlign: TextAlign.center,
                           style: context.textTheme.titleMedium,
                         ),
@@ -145,20 +172,29 @@ class HomeScreen extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final file = files[index];
                       return ListTile(
-                        onTap:
-                            () => context.pushNamed(
-                              AppRoutes.noteRoute,
-                              pathParameters: {
-                                "fileName": file.name ?? "No name",
-                                "fileId": file.id ?? "",
-                              },
-                            ),
+                        onTap: () {
+                          final Map<String, dynamic> queryParams = {};
+                          if (!isOnline) {
+                            queryParams["email"] = widget.email;
+                          }
+                          context.pushNamed(
+                            AppRoutes.noteRoute,
+                            pathParameters: {
+                              "fileName":
+                                  isOnline
+                                      ? file.name ?? "No name"
+                                      : (file as ContentFile).fileName,
+                              "fileId": file.id ?? " ",
+                            },
+                            queryParameters: queryParams,
+                          );
+                        },
                         onLongPress: () {
                           showDialog(
                             context: context,
                             barrierDismissible: false,
                             builder: (context) {
-                              return DeleteNoteDialog(file: file);
+                              return DeleteNoteDialog(widget.email, file: file);
                             },
                           );
                         },
@@ -178,20 +214,25 @@ class HomeScreen extends ConsumerWidget {
                           color: context.theme.iconTheme.color!.withAlpha(100),
                         ),
                         title: Text(
-                          file.name ?? "No name",
+                          isOnline
+                              ? file.name ?? "No name"
+                              : (file as ContentFile).fileName,
                           style: context.textTheme.titleMedium,
                         ),
                       );
                     },
                   );
                 },
-                error:
-                    (error, stackTrace) => Center(
-                      child: Text(
-                        (error as Failure).message,
-                        style: const TextStyle(color: Colors.red),
-                      ),
+                error: (error, stackTrace) {
+                  print(error);
+                  print(stackTrace);
+                  return Center(
+                    child: Text(
+                      (error.toString()),
+                      style: const TextStyle(color: Colors.red),
                     ),
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
               ),
             ),
@@ -201,19 +242,27 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  void syncOfflineNotes(BuildContext context, WidgetRef ref) async {
+  void syncOfflineNotes(
+    BuildContext context,
+    WidgetRef ref,
+    String email,
+  ) async {
+    ref.read(_isSyncingProvider.notifier).update((state) => true);
     final syncNotes = getIt<SyncDriveNotes>();
-    final syncStatus = await syncNotes(NoParams());
+    final syncStatus = await syncNotes(SyncDriveNotesParams(email));
     syncStatus.fold(
       (failure) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(failure.message)));
       },
-      (status) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Sync completed")));
+      (synced) {
+        if (synced) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Sync completed")));
+          ref.refresh(driveNotesFilesNotifierProvider.future);
+        }
       },
     );
     ref.read(_isSyncingProvider.notifier).update((state) => false);
