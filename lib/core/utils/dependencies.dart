@@ -4,6 +4,7 @@ import 'package:drive_notes_app/features/auth/domain/repository/auth_repository.
 import 'package:drive_notes_app/features/auth/domain/usecases/get_previous_user.dart';
 import 'package:drive_notes_app/features/auth/domain/usecases/is_user_signed_in.dart';
 import 'package:drive_notes_app/features/auth/domain/usecases/sign_in_user.dart';
+import 'package:drive_notes_app/features/auth/domain/usecases/sign_out_user.dart';
 import 'package:drive_notes_app/features/home/data/datasource/home_datasource.dart';
 import 'package:drive_notes_app/features/home/data/repository/home_repository_impl.dart';
 import 'package:drive_notes_app/features/home/domain/repository/home_repository.dart';
@@ -67,6 +68,7 @@ void registerUsecases() {
   getIt.registerFactory(() => SignInUser(getIt()));
   getIt.registerFactory(() => IsUserSignedIn(getIt()));
   getIt.registerFactory(() => GetPreviousUser(getIt()));
+  getIt.registerFactory(() => SignOutUser(getIt()));
 
   // home
   getIt.registerFactory(() => CreateDriveNotesFolder(getIt()));

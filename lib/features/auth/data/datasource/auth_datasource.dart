@@ -7,6 +7,7 @@ abstract class AuthDataSource {
   Future<Either<Failure, GoogleSignInAccount?>> signInUser();
   Future<Either<Failure, bool>> isUserSignedIn();
   Future<Either<Failure, GoogleSignInAccount?>> getPreviousUser();
+  Future<Either<Failure, void>> signOutUser();
 }
 
 class AuthDataSourceImpl implements AuthDataSource {
@@ -35,6 +36,16 @@ class AuthDataSourceImpl implements AuthDataSource {
     try {
       final account = await googleSignIn.signIn();
       return Right(account);
+    } catch (e) {
+      return Left(Failure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> signOutUser() async {
+    try {
+      await googleSignIn.signOut();
+      return Right(());
     } catch (e) {
       return Left(Failure(e.toString()));
     }

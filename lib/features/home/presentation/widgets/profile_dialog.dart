@@ -1,9 +1,13 @@
 import 'package:drive_notes_app/core/utils/extensions/responsive_extensions.dart';
 import 'package:drive_notes_app/core/utils/extensions/theme_extensions.dart';
+import 'package:drive_notes_app/core/utils/no_params.dart';
+import 'package:drive_notes_app/features/auth/domain/usecases/sign_out_user.dart';
 import 'package:drive_notes_app/features/splash/presentation/providers/theme_notifier/theme_notifier.dart';
 import 'package:drive_notes_app/main.dart';
+import 'package:drive_notes_app/router/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class ProfileDialog extends ConsumerWidget {
@@ -70,7 +74,28 @@ class ProfileDialog extends ConsumerWidget {
                 ),
               ],
             ),
-            ElevatedButton(onPressed: () {}, child: Text("Sign Out")),
+            ElevatedButton(
+              onPressed: () async {
+                final signOut = getIt<SignOutUser>();
+                final status = await signOut(NoParams());
+                status.fold(
+                  (failure) {
+                    context.pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(failure.message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  },
+                  (success) {
+                    context.pop();
+                    context.goNamed(AppRoutes.authRoute);
+                  },
+                );
+              },
+              child: Text("Sign Out"),
+            ),
           ],
         ),
       ),

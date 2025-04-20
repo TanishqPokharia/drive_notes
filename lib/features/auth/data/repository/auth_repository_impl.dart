@@ -22,4 +22,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, GoogleSignInAccount?>> signInUser() {
     return dataSource.signInUser();
   }
+
+  @override
+  Future<Either<Failure, void>> signOutUser() async {
+    return dataSource.signOutUser();
+  }
 }

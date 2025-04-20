@@ -77,7 +77,7 @@ class _NoteScreenState extends ConsumerState<NoteScreen> {
                   controller: _textEditingController,
                   maxLines: null,
                   expands: true,
-                  style: TextStyle(color: Colors.white),
+                  style: context.textTheme.titleMedium,
                   textAlignVertical: TextAlignVertical.top,
                   decoration: InputDecoration(
                     enabled: ref.watch(_enableEditingProvider),
