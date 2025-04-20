@@ -27,7 +27,6 @@ With built-in offline support and Google OAuth 2.0 authentication, DriveNotes pr
 
 ## 🚧 Limitations
 
-- Currently, **offline support** is partial. Notes are stored locally when offline, and uploaded to Drive during the next authenticated online session.
 - Certain **edge cases in synchronization** (e.g. conflicting updates, drive quota issues) are yet to be handled robustly.
 
 ---
